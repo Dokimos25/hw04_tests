@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
-
-from posts.models import Post, Group
+from ..models import Post, Group
 
 User = get_user_model()
 
@@ -45,7 +44,6 @@ class PostURLTests(TestCase):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, 200)
 
-    # Проверяем доступность страниц для авторизованного пользователя
     def test_autorized_urls_access(self):
         """Страницы доступные авторизованному пользователю."""
 
@@ -62,7 +60,6 @@ class PostURLTests(TestCase):
                 response = self.authorized_client.get(address)
                 self.assertEqual(response.status_code, 200)
 
-    # Проверяем редиректы для неавторизованного пользователя
     def test_list_url_redirect_guest(self):
         """Страницы перенаправляют анонимного пользователя
         на страницу логина.
@@ -79,16 +76,14 @@ class PostURLTests(TestCase):
                 response = self.guest_client.get(address, follow=True)
                 self.assertRedirects(response, redirect_address)
 
-    # Редирект для не автора
     def test_redirect_not_author(self):
-        """Редирект при попытке редактирования поста не авром"""
+        """Редирект при попытке редактирования поста не автором"""
 
         response = self.authorized_client_not_author.get(
             f"/posts/{self.post.pk}/edit/", follow=True
         )
         self.assertRedirects(response, f"/posts/{self.post.pk}/")
 
-    # Проверка вызываемых шаблонов для каждого адреса
     def test_task_list_url_corret_templates(self):
         """Страницы доступные авторизованному пользователю."""
 
@@ -105,7 +100,6 @@ class PostURLTests(TestCase):
                 response = self.authorized_client.get(address)
                 self.assertTemplateUsed(response, template)
 
-    # Страница не найденна
     def test_page_not_found(self):
         """Страница не найденна."""
         response = self.guest_client.get("/unexisting_page/")

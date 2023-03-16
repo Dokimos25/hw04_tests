@@ -8,7 +8,7 @@ class StaticURLTests(TestCase):
         self.guest_client = Client()
 
     def test_author_and_tech(self):
-        """Проверяем, доступность страниц about/author и about/tech."""
+        """Проверка доступности страниц about/author, about/tech."""
         urls = (
             '/about/author/',
             '/about/tech/',
@@ -19,6 +19,6 @@ class StaticURLTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_page_404(self):
-        """Проверяем, запрос к несуществующей странице."""
+        """Проверка запрос к несуществующей странице."""
         response = self.guest_client.get('/page_404/')
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
