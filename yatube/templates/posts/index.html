@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>
+{% block title %}
+Последние обновления на сайте
+{% endblock title %}
+</h1>
+{% for post in posts %}
+{% include 'includes/article.html' %}
+  {% if not forloop.last %}
+    <hr>
+  {% endif %}
+{% endfor %}
+<div class="d-flex justify-content-center">
+  <div>
+    {% include 'posts/includes/paginator.html' %}
+  </div>
+</div>
+{% endblock %}
