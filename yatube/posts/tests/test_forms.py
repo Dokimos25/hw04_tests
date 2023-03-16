@@ -1,12 +1,10 @@
+from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-from http import HTTPStatus
+
 from ..forms import PostForm
 from ..models import Group, Post, User
-
-User = get_user_model()
 
 
 class PostCreateFormTests(TestCase):
@@ -14,15 +12,15 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.author = User.objects.create_user(username='TestAuthor')
-        cls.auth_user = User.objects.create_user(username="TestAuthorUser")
+        cls.auth_user = User.objects.create_user(username='TestAuthUser')
         cls.group = Group.objects.create(
-            title="Тестовая группа",
-            slug="test-slug",
-            description="Тестовое описание",
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
         )
         cls.post = Post.objects.create(
             author=cls.author,
-            text="Тестовая запись",
+            text='Тестовый текст поста',
             group=cls.group,
         )
         cls.form = PostForm()
@@ -33,29 +31,27 @@ class PostCreateFormTests(TestCase):
         self.authorized_client.force_login(PostCreateFormTests.auth_user)
         self.authorized_client_author.force_login(PostCreateFormTests.author)
 
-    def test_create_post(self):
-        """Валидная форма создает запись в Post."""
-
+    def test_create_task(self):
+        """Валидная форма создает запись в Posts."""
         post_count = Post.objects.count()
         form_data = {
-            "text": "Тестовая запись через форму",
-            "group": self.group.pk,
+            'text': 'Введенный в форму текст',
+            'group': self.group.pk,
         }
         response = self.authorized_client.post(
-            reverse("posts:post_create"), data=form_data, follow=True
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
         )
         self.assertRedirects(
             response,
             reverse(
-                "posts:profile",
-                kwargs={"username": self.auth_user.username}
-            ),
+                'posts:profile', kwargs={'username': self.auth_user.username}
+            )
         )
         self.assertEqual(Post.objects.count(), post_count + 1)
         self.assertTrue(
-            Post.objects.filter(
-                text="Тестовая запись через форму",
-            ).exists()
+            Post.objects.filter(text='Введенный в форму текст').exists()
         )
 
     def test_author_edit_post(self):
