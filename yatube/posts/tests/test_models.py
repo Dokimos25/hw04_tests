@@ -1,57 +1,93 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
+from posts.models import Group, Post
 
-from ..models import Group, Post, User
+User = get_user_model()
 
 
-class PostModelTest(TestCase):
+class GroupModelsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='auth')
-        cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='Тестовый слаг',
-            description='Тестовое описание',
-        )
-        cls.post = Post.objects.create(
-            author=cls.user,
-            text='Тестовый пост',
-        )
+        cls.group = Group.objects.create(title='Тестовая группа')
 
-    def test_model_post_have_correct_object_names(self):
-        """Проверяем, что у модели post корректно работает __str__."""
-        post = PostModelTest.post
-        expected_object_name = post.text[:15]
-        self.assertEqual(expected_object_name, str(post))
+    def test_group_str_title(self):
+        """Проверка, совпадает ли название группы."""
+        group = GroupModelsTest.group
+        self.assertEqual(str(group), group.title)
 
-    def test_model_group_have_correct_object_names(self):
-        """Проверяем, что у модели group корректно работает __str__."""
-        group = PostModelTest.group
-        expected_object_name = group.title
-        self.assertEqual(expected_object_name, str(group))
-
-    def test_model_post_have_correct_verbose_names(self):
-        """Проверяем, что verbose_name в полях совпадает с ожидаемым."""
-        post = PostModelTest.post
+    def test_group_verbose_name(self):
+        """Проверка, совпадают ли verbose_name в полях Group."""
+        group = GroupModelsTest.group
         field_verboses = {
-            'text': 'Текст поста',
-            'pub_date': 'Дата публикации',
-            'author': 'Автор',
-            'group': 'Группа',
+            'title': 'Название группы',
+            'description': 'Описание группы',
         }
-        for field, expected in field_verboses.items():
-            with self.subTest(field=field):
+        for value, expected in field_verboses.items():
+            with self.subTest(value=value):
                 self.assertEqual(
-                    post._meta.get_field(field).verbose_name, expected)
+                    group._meta.get_field(value).verbose_name, expected
+                )
 
-    def test_model_post_have_correct_help_text(self):
-        """Проверяем, что help_text в полях совпадает с ожидаемым."""
-        post = PostModelTest.post
-        field_help_texts = {
-            'text': 'Введите текст поста',
-            'group': 'Группа, к которой будет относиться пост',
+    def test_group_help_text(self):
+        """Проверка совпадают ли help_texts в полях Group."""
+        group = GroupModelsTest.group
+        help_texts = {
+            'title': 'Введите название тематической группы',
+            'description': 'Добавьте текст описания группы',
         }
-        for field, expected in field_help_texts.items():
-            with self.subTest(field=field):
+        for value, expected in help_texts.items():
+            with self.subTest(value=value):
                 self.assertEqual(
-                    post._meta.get_field(field).help_text, expected)
+                    group._meta.get_field(value).help_text, expected
+                )
+
+
+class PostModelsTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='Тестовый пользователь')
+        cls.group = Group.objects.create(title='Тестовая группа')
+        cls.post = Post.objects.create(
+            text='Тестовый пост Тестовый пост Тест',
+            author=cls.user,
+            group=cls.group,
+        )
+
+    def test_post_str_text(self):
+        """Проверка, выводятся ли только первые пятнадцать символов поста."""
+        post = PostModelsTest.post
+        text = post.text
+        self.assertEqual(str(post), text[:15])
+
+    def test_post_verbose_name(self):
+        """Проверка, совпадают ли verbose_name в полях Post."""
+        post = PostModelsTest.post
+        field_verboses = {
+            'text': 'Текст статьи',
+            'pub_date': 'Дата публикации',
+            'author': 'Автор статьи',
+            'group': 'Группа статей',
+        }
+        for value, expected in field_verboses.items():
+            with self.subTest(value=value):
+                self.assertEqual(
+                    post._meta.get_field(value).verbose_name, expected
+                )
+
+    def test_post_help_text(self):
+        """Проверка, совпадают ли help_texts в полях Post."""
+        post = PostModelsTest.post
+        help_texts = {
+            'text': 'Введите текст статьи',
+            'pub_date': 'Укажите дату публикации',
+            'author': 'Укажите автора статьи',
+            'group': 'Выберите тематическую группу '
+                     'в выпадающем списке по желанию',
+        }
+        for value, expected in help_texts.items():
+            with self.subTest(value=value):
+                self.assertEqual(
+                    post._meta.get_field(value).help_text, expected
+                )

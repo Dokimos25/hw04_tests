@@ -1,81 +1,64 @@
-from http import HTTPStatus
-
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from posts.models import Group, Post
 
-from ..forms import PostForm
-from ..models import Group, Post, User
+User = get_user_model()
 
 
-class PostCreateFormTests(TestCase):
+class PostsFormsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.author = User.objects.create_user(username='TestAuthor')
-        cls.auth_user = User.objects.create_user(username='TestAuthUser')
+        cls.author = User.objects.create_user(username='Новый пользователь')
         cls.group = Group.objects.create(
-            title='Тестовая группа',
-            slug='test-slug',
-            description='Тестовое описание',
+            title='Тестовое название группы',
+            slug='test_slug',
+            description='Тестовое описание группы',
         )
         cls.post = Post.objects.create(
             author=cls.author,
-            text='Тестовый текст поста',
+            text='Тестовый пост',
             group=cls.group,
         )
-        cls.form = PostForm()
 
     def setUp(self):
         self.authorized_client = Client()
-        self.authorized_client_author = Client()
-        self.authorized_client.force_login(PostCreateFormTests.auth_user)
-        self.authorized_client_author.force_login(PostCreateFormTests.author)
+        self.authorized_client.force_login(self.author)
 
-    def test_create_task(self):
-        """Валидная форма создает запись в Posts."""
+    def test_posts_forms_create_post(self):
+        """Проверка, создает ли форма пост в базе."""
         post_count = Post.objects.count()
         form_data = {
-            'text': 'Введенный в форму текст',
-            'group': self.group.pk,
+            'text': 'Тестовый пост формы',
+            'group': self.group.id,
         }
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse('posts:post_create'),
             data=form_data,
-            follow=True
-        )
-        self.assertRedirects(
-            response,
-            reverse(
-                'posts:profile', kwargs={'username': self.auth_user.username}
-            )
         )
         self.assertEqual(Post.objects.count(), post_count + 1)
-        self.assertTrue(
-            Post.objects.filter(text='Введенный в форму текст').exists()
-        )
+        self.assertTrue(Post.objects.filter(
+            text='Тестовый пост формы',
+            group=self.group.id,
+        ).exists())
 
-    def test_author_edit_post(self):
-        """Валидная форма изменяет запись в Posts."""
+    def test_posts_forms_edit_post(self):
+        """Проверка, редактируется ли пост."""
         form_data = {
-            'text': 'Введенный в форму текст',
-            'group': self.group.pk,
+            'text': 'Новый текст поста',
+            'group': self.group.id,
         }
-        self.authorized_client_author.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
-        )
-        post = Post.objects.get(id=self.group.pk)
-        self.authorized_client_author.get(f'/posts/{post.pk}/edit/')
-        form_data = {
-            'text': 'Отредактированный в форме текст',
-            'group': self.group.pk,
-        }
-        response = self.authorized_client_author.post(
-            reverse('posts:post_edit', kwargs={'post_id': self.post.pk}),
-            data=form_data,
-            follow=True
-        )
-        post_edit = Post.objects.get(id=self.group.pk)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(post_edit.text, 'Отредактированный в форме текст')
+        self.authorized_client.post(reverse(
+            'posts:post_edit',
+            kwargs={'post_id': self.post.id},
+        ), data=form_data)
+        response = self.authorized_client.get(reverse(
+            'posts:post_detail',
+            kwargs={'post_id': self.post.id},
+        ))
+        self.assertEqual(response.context['post'].text, 'Новый текст поста')
+        self.assertTrue(Post.objects.filter(
+            text='Новый текст поста',
+            group=self.group.id,
+        ).exists())
