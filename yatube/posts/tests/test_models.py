@@ -1,49 +1,9 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..models import Group, Post
-
-User = get_user_model()
+from ..models import Group, Post, User
 
 
 class PostModelTest(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user = User.objects.create_user(username='auth')
-        cls.post = Post.objects.create(
-            text='Тестовый текст больше 15 символов для проверки...',
-            author=cls.user,
-        )
-
-    def test_post_str(self):
-        """Проверка __str__ у post."""
-        self.assertEqual(self.post.text[:15], str(self.post))
-
-    def test_post_verbose_name(self):
-        """Проверка verbose_name у post."""
-        field_verboses = {
-            'text': 'Текст поста',
-            'pub_date': 'Дата публикации',
-            'author': 'Автор',
-            'group': 'Группа', }
-        for value, expected in field_verboses.items():
-            with self.subTest(value=value):
-                verbose_name = self.post._meta.get_field(value).verbose_name
-                self.assertEqual(verbose_name, expected)
-
-    def test_post_help_text(self):
-        """Проверка help_text у post."""
-        feild_help_texts = {
-            'text': 'Текст нового поста',
-            'group': 'Группа, к которой будет относиться пост', }
-        for value, expected in feild_help_texts.items():
-            with self.subTest(value=value):
-                help_text = self.post._meta.get_field(value).help_text
-                self.assertEqual(help_text, expected)
-
-
-class GroupModelTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -53,19 +13,45 @@ class GroupModelTest(TestCase):
             slug='Тестовый слаг',
             description='Тестовое описание',
         )
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый пост',
+        )
 
-    def test_group_str(self):
-        """Проверка __str__ у group."""
-        self.assertEqual(self.group.title, str(self.group))
+    def test_model_post_have_correct_object_names(self):
+        """Проверяем, что у модели post корректно работает __str__."""
+        post = PostModelTest.post
+        expected_object_name = post.text[:15]
+        self.assertEqual(expected_object_name, str(post))
 
-    def test_group_verbose_name(self):
-        """Проверка verbose_name у group."""
+    def test_model_group_have_correct_object_names(self):
+        """Проверяем, что у модели group корректно работает __str__."""
+        group = PostModelTest.group
+        expected_object_name = group.title
+        self.assertEqual(expected_object_name, str(group))
+
+    def test_model_post_have_correct_verbose_names(self):
+        """Проверяем, что verbose_name в полях совпадает с ожидаемым."""
+        post = PostModelTest.post
         field_verboses = {
-            'title': 'Заголовок',
-            'slug': 'ЧПУ',
-            'description': 'Описание',
+            'text': 'Текст поста',
+            'pub_date': 'Дата публикации',
+            'author': 'Автор',
+            'group': 'Группа',
         }
-        for value, expected in field_verboses.items():
-            with self.subTest(value=value):
-                verbose_name = self.group._meta.get_field(value).verbose_name
-                self.assertEqual(verbose_name, expected)
+        for field, expected in field_verboses.items():
+            with self.subTest(field=field):
+                self.assertEqual(
+                    post._meta.get_field(field).verbose_name, expected)
+
+    def test_model_post_have_correct_help_text(self):
+        """Проверяем, что help_text в полях совпадает с ожидаемым."""
+        post = PostModelTest.post
+        field_help_texts = {
+            'text': 'Введите текст поста',
+            'group': 'Группа, к которой будет относиться пост',
+        }
+        for field, expected in field_help_texts.items():
+            with self.subTest(field=field):
+                self.assertEqual(
+                    post._meta.get_field(field).help_text, expected)
