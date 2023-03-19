@@ -1,7 +1,6 @@
-from datetime import datetime
+import datetime
 
 
 def year(request):
-    return {
-        'year': datetime.now().year,
-    }
+    year = datetime.datetime.now().year
+    return {'year': year}
