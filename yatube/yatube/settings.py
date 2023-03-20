@@ -138,4 +138,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-POSTS_PER_PAGE = 10
+NUMBER_POST = 10

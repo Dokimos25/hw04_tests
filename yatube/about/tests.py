@@ -1,24 +1,31 @@
 from http import HTTPStatus
 
 from django.test import Client, TestCase
+from django.urls import reverse
 
 
 class StaticURLTests(TestCase):
     def setUp(self):
-        self.guest_client = Client()
+        self.user_guest = Client()
 
-    def test_author_and_tech(self):
-        """Проверка доступности страниц about/author, about/tech."""
-        urls = (
-            '/about/author/',
-            '/about/tech/',
-        )
-        for url in urls:
-            with self.subTest():
-                response = self.guest_client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+    def test_about_url_exists_at_desired_location(self):
+        """Проверка адреса about."""
+        url_code = {
+            reverse('about:author'): HTTPStatus.OK,
+            reverse('about:tech'): HTTPStatus.OK,
+        }
+        for url, code in url_code.items():
+            with self.subTest(url=url):
+                status = self.user_guest.get(url).status_code
+                self.assertEqual(status, code)
 
-    def test_page_404(self):
-        """Проверка запрос к несуществующей странице."""
-        response = self.guest_client.get('/page_404/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+    def test_about_url_uses_correct_template(self):
+        """Проверка шаблона about."""
+        url_templates = {
+            reverse('about:author'): 'about/author.html',
+            reverse('about:tech'): 'about/tech.html',
+        }
+        for url, template in url_templates.items():
+            with self.subTest(url=url):
+                adress_url = self.user_guest.get(url)
+                self.assertTemplateUsed(adress_url, template)
