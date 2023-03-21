@@ -25,7 +25,7 @@ def index(request):
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts.all()[:NUM_POSTS]
+    posts = group.posts.all()
     paginator = Paginator(posts, NUM_POSTS)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
