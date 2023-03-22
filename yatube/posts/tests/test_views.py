@@ -95,12 +95,15 @@ class PaginatorViewsTest(TestCase):
             slug='test_slug',
             description='Тестовое описание группы',
         )
-        for i in range(13):
-            Post.objects.create(
-                text=f'Пост #{i}',
+
+        posts = [
+            Post(
                 author=cls.user,
+                text=f'Тестовый текст поста {post_id}',
                 group=cls.group
-            )
+            ) for post_id in range(13)
+        ]
+        Post.objects.bulk_create(posts)
 
     def setUp(self):
         self.unauthorized_client = Client()
