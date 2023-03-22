@@ -19,7 +19,6 @@ def index(request):
         'posts': page_obj,
         'page_obj': page_obj,
     }
-    print("page_number", page_number)
     return render(request, 'posts/index.html', context)
 
 
